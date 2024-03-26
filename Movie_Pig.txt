@@ -1,0 +1,27 @@
+1. Filtering: You can filter the data based on certain conditions. For example, you can filter movies released after a certain year.
+
+metadata = LOAD '/user/maria_dev/ml-100k/u.item' USING PigStorage('|') AS (movieID:int, movieTitle:chararray, releaseDate:chararray, videoRelease:chararray, imdbLink:chararray);
+filtered_metadata = FILTER metadata BY ToDate(releaseDate, 'dd-MMM-yyyy') > ToDate('01-Jan-2000', 'dd-MMM-yyyy');
+STORE filtered_metadata INTO '/user/maria_dev/filtered_metadata.txt';
+
+2.Grouping and Aggregating: You can group the data by certain fields and perform aggregate operations. For example, you can find the average rating for each user.
+
+ratings = LOAD '/user/maria_dev/ml-100k/u.data' AS (userID:int, movieID:int, rating:int, ratingTime:int);
+grouped_ratings_by_user = GROUP ratings BY userID;
+avg_ratings_by_user = FOREACH grouped_ratings_by_user GENERATE group AS userID, AVG(ratings.rating) AS avgRating;
+STORE avg_ratings_by_user INTO '/user/maria_dev/avg_ratings_by_user.txt';
+
+3. Joining: You can join multiple datasets together. For example, you can join the ratings and metadata to get movie titles in the ratings.
+
+ratings_with_titles = JOIN ratings BY movieID, metadata BY movieID;
+STORE ratings_with_titles INTO '/user/maria_dev/ratings_with_titles.txt';
+
+4. Sorting: You can sort the data based on certain fields. For example, you can sort the movies based on their average ratings.
+
+sorted_movies = ORDER avg_ratings_by_user BY avgRating DESC;
+STORE sorted_movies INTO '/user/maria_dev/sorted_movies.txt';
+
+5. Limiting: You can limit the number of tuples in a relation. For example, you can get the top 10 movies with the highest average ratings.
+
+top_10_movies = LIMIT sorted_movies 10;
+STORE top_10_movies INTO '/user/maria_dev/top_10_movies.txt';
